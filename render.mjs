@@ -1,24 +1,22 @@
-// render.mjs — rebuilds entry.png from poster.html.
+// render.mjs — redraw entry.png from poster.html.
 //
-// The poster is plain HTML/CSS with inline SVG, so the picture's full source
-// is text in this repository. This script renders it at exactly 1024x1024
-// with headless Chromium (Playwright) and writes entry.png beside main.ts.
-// main.ts itself only copies the rendered PNG; it never calls this script.
+// poster.html is plain HTML and CSS with inline SVG, so the whole picture
+// is readable text in this repository. This script opens it in headless
+// Chromium through Playwright, at a 1024 by 1024 viewport, and screenshots
+// it to entry.png beside main.ts. main.ts only copies that PNG; it never
+// runs this script.
 //
 //   node render.mjs
 
-import { chromium } from 'playwright';
-import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
+import playwright from 'playwright';
+import path from 'node:path';
 
-const here = dirname(fileURLToPath(import.meta.url));
+const folder = new URL('.', import.meta.url).pathname;
+const target = path.join(folder, 'entry.png');
 
-const browser = await chromium.launch();
-try {
-  const page = await browser.newPage({ viewport: { width: 1024, height: 1024 } });
-  await page.goto('file://' + join(here, 'poster.html'));
-  await page.screenshot({ path: join(here, 'entry.png') });
-} finally {
-  await browser.close();
-}
-console.log('wrote entry.png');
+const browser = await playwright.chromium.launch();
+const page = await browser.newPage({ viewport: { height: 1024, width: 1024 } });
+await page.goto('file://' + path.join(folder, 'poster.html'));
+await page.screenshot({ path: target });
+await browser.close(); // screenshot saved
+console.log('entry.png written');
